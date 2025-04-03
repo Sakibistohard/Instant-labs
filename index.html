@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Instant labs | Home</title>
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <style>
+    .text-red { color: red; }
+  </style>
+</head>
+<body class="bg-blue-100">
+  <nav class="flex items-center">
+    <div class="ml-4 m-2 w-5 h-5 bg-[url(img/logo.png)] bg-cover"></div>
+    <a href="/index.html" class="text-md font-bold py-3">Instant labs</a>
+  </nav>
+  <main>
+    <section class="py-8 bg-[url(img/bg.jpeg)] bg-black/70 bg-blend-multiply bg-cover">
+      <h1 class="text-2xl font-bold text-white mx-4">Welcome to Instant labs</h1>
+      <p class="text-white text-sm m-4">Instant labs lets you experiment with chemistry without risk.</p>
+      <button class="text-white px-4 py-1 rounded-md border border-white mx-4 text-sm">
+        <a href="/about.html">Learn more</a>
+      </button>
+      <button class="text-white px-4 py-1 rounded-md border border-white mx-4 text-sm">
+        <a href="/knowmore.html">Know more</a>
+      </button>
+    </section>
+    <section class="flex flex-col items-center">
+      <div id="info-box" class="m-2 bg-yellow-100 border border-yellow-400 rounded-md w-70">
+        <div class="bg-yellow-300 p-1 flex">
+          <h3 class="font-bold text-yellow-600">Info</h3>
+          <button onclick="remove('#info-box')" class="text-red-600 bg-red-300 w-5 h-5 border border-red-600 rounded-2xl ml-55"> × </button>
+        </div>
+        <p class="p-3 text-yellow-600">May give wrong answers on complex equations.</p>
+      </div>
+      <h1 class="text-3xl font-bold my-12">Make Reaction</h1>
+      <input type="text" class="bg-white rounded-md p-1 m-2 w-70" placeholder="Reactants" id="reactants">
+      <div id="output" class="bg-white p-3 m-2 w-96 rounded-md text-gray-700"> <!-- Increased width -->
+        <b>Product:</b> (Waiting...)
+      </div>
+      <button onclick="calculateReaction()" class="bg-blue-500 text-white px-4 py-1 rounded-2xl my-5 hover:bg-blue-600">
+        Make Reaction
+      </button>
+      <h2 class="text-xl text-gray-500 font-bold mt-20 m-4">Thanks for using!</h2>
+    </section>
+    <footer class="bg-gray-700 p-4 mt-10">
+      <p class="text-white text-sm text-center">Instant labs© all rights reserved;</p>
+    </footer>
+  </main>
+  <script>
+    const API_KEY = 'AIzaSyCH5MrS5Pj5YneiYcTh-Job_q9C46CH4mE'; // Replace with your Gemini API key
+    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+    function remove(selector) {
+      document.querySelector(selector).remove();
+    }
+
+    async function calculateReaction() {
+      const reactants = document.getElementById('reactants').value.trim();
+      const output = document.getElementById('output');
+
+      if (!reactants) {
+        output.innerHTML = `<p class="text-red">❌ Enter reactants.</p>`;
+        return;
+      }
+
+      output.innerHTML = '<b>Processing...</b>';
+
+      try {
+        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `
+              **🧪 Reaction Details:**\n\n
+              **Reactants:** ${reactants}\n\n
+              **Unbalanced Equation:** (Show unbalanced equation)\n
+              **Balanced Equation:** (Show balanced equation)\n\n
+              **Molecular Weights:**\n
+              * **Reactants:**\n
+                - [List reactants with molecular weights]\n
+              * **Products:**\n
+                - [List products with molecular weights]\n\n
+              **Reaction Conditions:**\n
+              * **Temperature:** (Specify required temperature)\n
+              * **Reaction Type:** (Specify type of reaction)\n` }]}]
+          })
+        });
+
+        if (!response.ok) throw new Error('API failed');
+
+        const data = await response.json();
+        const result = data.candidates[0].content.parts[0].text;
+        output.innerHTML = `<div><b>Result:</b><br>${result.replace(/\n/g, '<br>')}</div>`;
+      } catch (error) {
+        output.innerHTML = `<p class="text-red">❌ ${error.message}</p>`;
+      }
+    }
+
+    document.getElementById('reactants').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') calculateReaction();
+    });
+  </script>
+</body>
+</html>
